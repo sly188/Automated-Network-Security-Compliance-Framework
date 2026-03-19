@@ -1,0 +1,48 @@
+---
+# creds live in vault.yml
+ansible_user:            "{{ vault_user }}"
+ansible_password:        "{{ vault_pass }}"
+ansible_become_password: "{{ vault_enable }}"
+
+ntp_servers:
+  - 10.0.0.1
+  - 10.0.0.2
+ntp_auth: true
+ntp_key_id: 1
+ntp_key: "{{ vault_ntp_key }}"
+
+log_servers:
+  - host: 10.0.1.100
+    port: 514
+  - host: 10.0.1.101
+    port: 514
+log_buf_size: 16384
+log_level: informational
+log_src_iface: Loopback0
+
+snmp_group: "NET-MGMT"
+snmp_user:      "{{ vault_snmp_user }}"
+snmp_auth_proto: sha
+snmp_auth_pass:  "{{ vault_snmp_auth }}"
+snmp_priv_proto: aes
+snmp_priv_pass:  "{{ vault_snmp_priv }}"
+
+ssh_bits: 4096
+ssh_timeout: 60
+ssh_retries: 3
+
+tacacs_hosts:
+  - host: 10.0.2.100
+    timeout: 5
+  - host: 10.0.2.101
+    timeout: 5
+tacacs_key: "{{ vault_tacacs_key }}"
+
+pw_min_len: 14
+report_dir: "reports"
+threshold: 80
+
+login_banner: |
+  AUTHORIZED ACCESS ONLY                                        
+  Unauthorized access is prohibited    
+  All activity is monitored and logged.               
