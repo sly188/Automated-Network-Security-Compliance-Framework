@@ -1,0 +1,40 @@
+---
+# full pipeline: audit -> harden -> verify -> report
+#
+# usage:
+#   full run    : ansible-playbook playbooks/site.yml
+#   dry run     : ansible-playbook playbooks/site.yml -e "check_only=true"
+#   single host : ansible-playbook playbooks/site.yml --limit rtr-core-01
+#   single tag  : ansible-playbook playbooks/site.yml --tags ssh
+
+- name: pre-hardening audit
+  hosts: network_devices
+  gather_facts: false
+  serial: 5
+  roles:
+    - auditing
+
+- name: apply hardening
+  hosts: network_devices
+  gather_facts: false
+  serial: 3
+  vars:
+    check_only: "{{ dry_run | default(false) }}"
+  roles:
+    - hardening
+  when: not (dry_run | default(false)) | bool
+
+- name: post-hardening verification
+  hosts: network_devices
+  gather_facts: false
+  serial: 5
+  roles:
+    - role: auditing
+      vars:
+        results_dir: "reports/post_hardening"
+
+- name: generate report
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - reporting

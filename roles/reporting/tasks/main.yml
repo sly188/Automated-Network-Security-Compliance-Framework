@@ -1,0 +1,65 @@
+---
+- name: create reports dir
+  file:
+    path: "{{ report_dir }}"
+    state: directory
+    mode: '0755'
+  run_once: true
+  delegate_to: localhost
+
+- name: load per-host results
+  set_fact:
+    all_results: "{{ all_results | default([]) + [lookup('file', item) | from_json] }}"
+  loop: "{{ query('fileglob', 'reports/audit_results/*.json') }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: calc overall stats
+  set_fact:
+    overall_score: >-
+      {{ (all_results | map(attribute='score') | map('float') | sum / all_results | length) | round(1) }}
+    critical_fails: >-
+      {{ all_results | sum(attribute='checks') | selectattr('severity','equalto','CRITICAL') | selectattr('status','equalto','FAIL') | list | length }}
+    high_fails: >-
+      {{ all_results | sum(attribute='checks') | selectattr('severity','equalto','HIGH') | selectattr('status','equalto','FAIL') | list | length }}
+    run_date: "{{ ansible_date_time.iso8601 }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: generate html report
+  template:
+    src: report.html.j2
+    dest: "{{ report_dir }}/report_{{ ansible_date_time.date }}.html"
+    mode: '0644'
+  vars:
+    all_results: "{{ all_results }}"
+    overall_score: "{{ overall_score }}"
+    critical_fails: "{{ critical_fails }}"
+    high_fails: "{{ high_fails }}"
+    run_date: "{{ run_date }}"
+  run_once: true
+  delegate_to: localhost
+
+- name: generate json summary
+  copy:
+    content: "{{ {
+      'date': run_date,
+      'overall_score': overall_score,
+      'total_hosts': all_results | length,
+      'critical_fails': critical_fails,
+      'high_fails': high_fails,
+      'hosts': all_results
+    } | to_nice_json }}"
+    dest: "{{ report_dir }}/report_{{ ansible_date_time.date }}.json"
+  run_once: true
+  delegate_to: localhost
+
+- name: final summary
+  debug:
+    msg: |
+      overall score : {{ overall_score }}%
+      hosts audited : {{ all_results | length }}
+      critical fails: {{ critical_fails }}
+      high fails    : {{ high_fails }}
+      report saved  : {{ report_dir }}/
+  run_once: true

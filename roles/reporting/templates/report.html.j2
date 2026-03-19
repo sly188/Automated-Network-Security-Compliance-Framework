@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Compliance Report — {{ run_date[:10] }}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f5f7; color: #333; }
+    header { background: #1a1a2e; color: white; padding: 28px 40px; }
+    header h1 { font-size: 22px; font-weight: 600; }
+    header p  { font-size: 12px; opacity: 0.6; margin-top: 5px; }
+    .wrap { max-width: 1300px; margin: 28px auto; padding: 0 20px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .card { background: white; border-radius: 8px; padding: 18px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .card .num { font-size: 34px; font-weight: 700; line-height: 1; }
+    .card .lbl { font-size: 11px; color: #999; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .green .num { color: #27ae60; }
+    .red   .num { color: #e74c3c; }
+    .amber .num { color: #f39c12; }
+    .blue  .num { color: #2980b9; }
+    h2 { font-size: 16px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #eee; }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.07); margin-bottom: 28px; }
+    th { background: #1a1a2e; color: white; padding: 11px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+    td { padding: 11px 14px; font-size: 13px; border-bottom: 1px solid #f2f2f2; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fafafa; }
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+    .pass     { background: #d4edda; color: #155724; }
+    .fail     { background: #f8d7da; color: #721c24; }
+    .critical { background: #e74c3c; color: white; }
+    .high     { background: #e67e22; color: white; }
+    .medium   { background: #f1c40f; color: #333; }
+    .low      { background: #bdc3c7; color: white; }
+    .bar-wrap { background: #eee; border-radius: 8px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; background: linear-gradient(to right, #e74c3c, #f39c12, #27ae60); border-radius: 8px; }
+    .pct { font-size: 11px; margin-top: 3px; font-weight: 600; }
+    .host-block { margin-bottom: 32px; }
+    .host-top { display: flex; justify-content: space-between; align-items: center; background: white; border-radius: 8px 8px 0 0; padding: 14px 18px; border-bottom: 2px solid #f2f2f2; box-shadow: 0 1px 4px rgba(0,0,0,0.07); }
+    .host-name { font-size: 15px; font-weight: 600; }
+    .host-meta { font-size: 11px; color: #aaa; margin-top: 3px; }
+    .host-score { font-size: 26px; font-weight: 700; }
+    footer { text-align: center; padding: 18px; font-size: 11px; color: #bbb; border-top: 1px solid #eee; margin-top: 32px; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Network Security Compliance Report</h1>
+  <p>Generated: {{ run_date }} &nbsp;|&nbsp; Threshold: {{ threshold }}%</p>
+</header>
+
+<div class="wrap">
+
+  <div class="cards">
+    <div class="card blue">
+      <div class="num">{{ all_results | length }}</div>
+      <div class="lbl">Devices Audited</div>
+    </div>
+    <div class="card {% if overall_score | float >= threshold | float %}green{% else %}red{% endif %}">
+      <div class="num">{{ overall_score }}%</div>
+      <div class="lbl">Overall Score</div>
+    </div>
+    <div class="card green">
+      <div class="num">{{ all_results | selectattr('score', 'ge', threshold | float) | list | length }}</div>
+      <div class="lbl">Compliant</div>
+    </div>
+    <div class="card red">
+      <div class="num">{{ all_results | selectattr('score', 'lt', threshold | float) | list | length }}</div>
+      <div class="lbl">Non-Compliant</div>
+    </div>
+    <div class="card red">
+      <div class="num">{{ critical_fails }}</div>
+      <div class="lbl">Critical Fails</div>
+    </div>
+    <div class="card amber">
+      <div class="num">{{ high_fails }}</div>
+      <div class="lbl">High Fails</div>
+    </div>
+  </div>
+
+  <h2>Host Summary</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Hostname</th><th>IP</th><th>Model</th><th>OS</th>
+        <th>Passed</th><th>Score</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for h in all_results | sort(attribute='score') %}
+      <tr>
+        <td><strong>{{ h.host }}</strong></td>
+        <td>{{ h.ip }}</td>
+        <td>{{ h.model | default('—') }}</td>
+        <td>{{ h.os_version | default('—') }}</td>
+        <td>{{ h.passed }}/{{ h.total }}</td>
+        <td>
+          <div class="bar-wrap"><div class="bar-fill" style="width:{{ h.score }}%"></div></div>
+          <div class="pct">{{ h.score }}%</div>
+        </td>
+        <td>
+          {% if h.score | float >= threshold | float %}
+            <span class="badge pass">compliant</span>
+          {% else %}
+            <span class="badge fail">non-compliant</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Detailed Results</h2>
+  {% for h in all_results %}
+  <div class="host-block">
+    <div class="host-top">
+      <div>
+        <div class="host-name">{{ h.host }}</div>
+        <div class="host-meta">{{ h.ip }} &nbsp;|&nbsp; {{ h.model }} &nbsp;|&nbsp; {{ h.os_version }}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="host-score" style="color:{% if h.score >= 90 %}#27ae60{% elif h.score >= 70 %}#f39c12{% else %}#e74c3c{% endif %}">
+          {{ h.score }}%
+        </div>
+        <div style="font-size:11px;color:#aaa">{{ h.passed }}/{{ h.total }} passed</div>
+      </div>
+    </div>
+    <table style="border-radius:0 0 8px 8px">
+      <thead>
+        <tr><th>ID</th><th>Category</th><th>Check</th><th>CIS</th><th>Severity</th><th>Result</th></tr>
+      </thead>
+      <tbody>
+        {% for c in h.checks | sort(attribute='status', reverse=True) %}
+        <tr>
+          <td><code>{{ c.id }}</code></td>
+          <td>{{ c.category }}</td>
+          <td>{{ c.description }}</td>
+          <td>{{ c.cis }}</td>
+          <td><span class="badge {{ c.severity | lower }}">{{ c.severity }}</span></td>
+          <td><span class="badge {{ c.status | lower }}">{{ c.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+
+</div>
+<footer>Network Hardening Framework &nbsp;|&nbsp; {{ run_date[:10] }}</footer>
+</body>
+</html>
