@@ -1,0 +1,34 @@
+---
+- name: set buffer size
+  ios_config:
+    lines:
+      - "logging buffered {{ log_buf_size }} {{ log_level }}"
+  when: not check_only | bool
+  tags: logging
+
+- name: remote syslog servers
+  ios_config:
+    lines:
+      - "logging host {{ item.host }} transport udp port {{ item.port }}"
+  loop: "{{ log_servers }}"
+  when: not check_only | bool
+  tags: logging
+
+- name: source interface for logs
+  ios_config:
+    lines:
+      - "logging source-interface {{ log_src_iface }}"
+  when: not check_only | bool
+  tags: logging
+
+- name: timestamps and login tracking
+  ios_config:
+    lines:
+      - "logging on"
+      - "logging trap {{ log_level }}"
+      - "service timestamps log datetime msec localtime show-timezone"
+      - "service timestamps debug datetime msec localtime show-timezone"
+      - "login on-failure log every 3"
+      - "login on-success log every 10"
+  when: not check_only | bool
+  tags: logging

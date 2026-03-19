@@ -1,0 +1,59 @@
+---
+- name: gather facts
+  ios_facts:
+    gather_subset:
+      - hardware
+      - config
+  register: dev_facts
+  tags: [always]
+
+- name: backup before touching anything
+  include_tasks: backup.yml
+  when: backup_first | bool
+
+- name: ssh hardening
+  include_tasks: ssh.yml
+  when: run_ssh | bool
+  tags: [ssh]
+
+- name: aaa setup
+  include_tasks: aaa.yml
+  when: run_aaa | bool
+  tags: [aaa]
+
+- name: ntp
+  include_tasks: ntp.yml
+  when: run_ntp | bool
+  tags: [ntp]
+
+- name: logging
+  include_tasks: logging.yml
+  when: run_logging | bool
+  tags: [logging]
+
+- name: snmp
+  include_tasks: snmp.yml
+  when: run_snmp | bool
+  tags: [snmp]
+
+- name: disable unnecessary services
+  include_tasks: services.yml
+  when: run_services | bool
+  tags: [services]
+
+- name: password policy
+  include_tasks: passwords.yml
+  when: run_passwords | bool
+  tags: [passwords]
+
+- name: banners
+  include_tasks: banners.yml
+  when: run_banners | bool
+  tags: [banners]
+
+- name: save config
+  ios_command:
+    commands:
+      - write memory
+  when: not check_only | bool
+  notify: save config

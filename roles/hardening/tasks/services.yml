@@ -1,0 +1,52 @@
+---
+- name: disable small servers
+  ios_config:
+    lines:
+      - "no service tcp-small-servers"
+      - "no service udp-small-servers"
+  when: not check_only | bool
+  tags: services
+
+- name: turn off http server
+  ios_config:
+    lines:
+      - "no ip http server"
+      - "no ip http secure-server"
+  when: not check_only | bool
+  tags: services
+
+- name: disable ip source routing
+  ios_config:
+    lines:
+      - "no ip source-route"
+  when: not check_only | bool
+  tags: services
+
+- name: tcp keepalives
+  ios_config:
+    lines:
+      - "service tcp-keepalives-in"
+      - "service tcp-keepalives-out"
+  when: not check_only | bool
+  tags: services
+
+- name: password encryption
+  ios_config:
+    lines:
+      - "service password-encryption"
+  when: not check_only | bool
+  tags: services
+
+- name: disable pad
+  ios_config:
+    lines:
+      - "no service pad"
+  when: not check_only | bool
+  tags: services
+
+- name: disable finger
+  ios_config:
+    lines:
+      - "no service finger"
+  when: not check_only | bool
+  tags: services

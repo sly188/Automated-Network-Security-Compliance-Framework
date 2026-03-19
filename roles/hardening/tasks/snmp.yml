@@ -1,0 +1,32 @@
+---
+# remove default community strings first, they're almost always there
+- name: remove default snmp communities
+  ios_config:
+    lines:
+      - "no snmp-server community public"
+      - "no snmp-server community private"
+  when: not check_only | bool
+  tags: snmp
+
+- name: snmpv3 group with authpriv
+  ios_config:
+    lines:
+      - "snmp-server group {{ snmp_group }} v3 priv"
+  when: not check_only | bool
+  tags: snmp
+
+- name: snmpv3 user
+  ios_config:
+    lines:
+      - "snmp-server user {{ snmp_user }} {{ snmp_group }} v3 auth {{ snmp_auth_proto }} {{ snmp_auth_pass }} priv {{ snmp_priv_proto }} {{ snmp_priv_pass }}"
+  no_log: true
+  when: not check_only | bool
+  tags: snmp
+
+- name: location and contact
+  ios_config:
+    lines:
+      - "snmp-server location DC1"
+      - "snmp-server contact netops@company.com"
+  when: not check_only | bool
+  tags: snmp

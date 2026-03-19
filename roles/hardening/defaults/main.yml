@@ -1,0 +1,15 @@
+---
+run_ssh:       true
+run_aaa:       true
+run_ntp:       true
+run_logging:   true
+run_snmp:      true
+run_services:  true
+run_passwords: true
+run_banners:   true
+
+backup_first: true
+check_only:   false
+
+backup_dir: "backups/{{ inventory_hostname }}/{{ ansible_date_time.date }}"
+cfg_timeout: 60

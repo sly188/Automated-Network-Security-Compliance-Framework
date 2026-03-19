@@ -1,0 +1,20 @@
+---
+- name: create backup folder
+  file:
+    path: "{{ backup_dir }}"
+    state: directory
+    mode: '0750'
+  delegate_to: localhost
+
+- name: pull running config
+  ios_command:
+    commands:
+      - "show running-config"
+  register: running_cfg
+
+- name: write config to file
+  copy:
+    content: "{{ running_cfg.stdout[0] }}"
+    dest: "{{ backup_dir }}/{{ inventory_hostname }}_{{ ansible_date_time.epoch }}.cfg"
+    mode: '0640'
+  delegate_to: localhost
