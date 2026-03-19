@@ -1,0 +1,14 @@
+---
+collections:
+  - name: cisco.ios
+    version: ">=4.6.1"
+  - name: cisco.nxos
+    version: ">=5.2.0"
+  - name: junipernetworks.junos
+    version: ">=6.0.0"
+  - name: ansible.netcommon
+    version: ">=6.1.0"
+  - name: ansible.utils
+    version: ">=2.12.0"
+  - name: community.general
+    version: ">=8.0.0"
