@@ -1,0 +1,8 @@
+.vault_pass
+backups/**/*.cfg
+backups/
+logs/
+reports/
+*.retry
+__pycache__/
+.DS_Store

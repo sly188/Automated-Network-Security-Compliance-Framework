@@ -1,0 +1,138 @@
+name: compliance pipeline
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'roles/**'
+      - 'inventories/**'
+      - 'playbooks/**'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'limit to specific hosts (blank = all)'
+        required: false
+        default: ''
+      dry_run:
+        description: 'dry run only'
+        required: false
+        default: 'true'
+
+jobs:
+  lint:
+    name: lint and syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install deps
+        run: |
+          pip install ansible ansible-lint
+          ansible-galaxy collection install cisco.ios
+
+      - name: lint
+        run: ansible-lint roles/ playbooks/
+
+      - name: syntax check
+        run: |
+          ansible-playbook playbooks/site.yml --syntax-check -i inventories/production
+          ansible-playbook playbooks/audit_only.yml --syntax-check -i inventories/production
+
+  audit:
+    name: compliance audit
+    runs-on: ubuntu-latest
+    needs: lint
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: write vault password
+        run: echo "${{ secrets.VAULT_PASSWORD }}" > .vault_pass
+
+      - name: setup ssh key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: install ansible
+        run: |
+          pip install ansible netmiko
+          ansible-galaxy collection install cisco.ios
+
+      - name: create dirs
+        run: mkdir -p logs reports/audit_results backups
+
+      - name: run audit
+        run: |
+          ansible-playbook playbooks/audit_only.yml \
+            -i inventories/production \
+            ${{ github.event.inputs.target != '' && format('--limit {0}', github.event.inputs.target) || '' }}
+
+      - name: upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report-${{ github.run_number }}
+          path: reports/
+          retention-days: 90
+
+      - name: check threshold
+        run: |
+          python3 - <<'EOF'
+          import json, sys, glob
+          files = glob.glob('reports/audit_results/*.json')
+          failed = []
+          for f in files:
+            with open(f) as fh:
+              d = json.load(fh)
+            if d.get('score', 0) < 80:
+              failed.append(f"{d['host']}: {d['score']}%")
+          if failed:
+            print("hosts below threshold:")
+            for h in failed: print(f"  {h}")
+            sys.exit(1)
+          print("all hosts compliant")
+          EOF
+
+  harden:
+    name: apply hardening
+    runs-on: ubuntu-latest
+    needs: audit
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: write vault password
+        run: echo "${{ secrets.VAULT_PASSWORD }}" > .vault_pass
+
+      - name: setup ssh key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: install ansible
+        run: |
+          pip install ansible netmiko
+          ansible-galaxy collection install cisco.ios
+
+      - name: create dirs
+        run: mkdir -p logs reports/audit_results reports/post_hardening backups
+
+      - name: run pipeline
+        run: |
+          ansible-playbook playbooks/site.yml \
+            -i inventories/production \
+            -e "dry_run=${{ github.event.inputs.dry_run || 'false' }}"
+
+      - name: upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-report-${{ github.run_number }}
+          path: reports/
+          retention-days: 90

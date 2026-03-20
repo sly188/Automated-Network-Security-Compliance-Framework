@@ -1,7 +1,7 @@
 ---
-vault_user:       "netadmin"
-vault_pass:       "CHANGE_ME"
-vault_enable:     "CHANGE_ME"
+vault_user:       "developer"
+vault_pass:       "C1sco12345"
+vault_enable:     "C1sco12345"
 vault_tacacs_key: "CHANGE_ME"
 vault_snmp_user:  "snmpv3user"
 vault_snmp_auth:  "CHANGE_ME"
