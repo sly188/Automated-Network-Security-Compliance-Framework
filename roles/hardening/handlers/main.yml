@@ -1,6 +1,6 @@
 ---
-- name: save config
-  ios_command:
+- name: Save config
+  cisco.ios.ios_command:
     commands:
       - write memory
   listen: "save config"

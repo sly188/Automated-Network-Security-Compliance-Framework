@@ -7,14 +7,14 @@
 #   single host : ansible-playbook playbooks/site.yml --limit rtr-core-01
 #   single tag  : ansible-playbook playbooks/site.yml --tags ssh
 
-- name: pre-hardening audit
+- name: Pre-hardening audit
   hosts: network_devices
   gather_facts: false
   serial: 5
   roles:
     - auditing
 
-- name: apply hardening
+- name: Apply hardening
   hosts: network_devices
   gather_facts: false
   serial: 3
@@ -24,16 +24,16 @@
     - hardening
   when: not (dry_run | default(false)) | bool
 
-- name: post-hardening verification
+- name: Post-hardening verification
   hosts: network_devices
   gather_facts: false
   serial: 5
   roles:
     - role: auditing
       vars:
-        results_dir: "reports/post_hardening"
+        auditing_results_dir: "reports/post_hardening"
 
-- name: generate report
+- name: Generate report
   hosts: localhost
   gather_facts: true
   roles:

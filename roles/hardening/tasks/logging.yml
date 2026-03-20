@@ -1,28 +1,28 @@
 ---
-- name: set buffer size
-  ios_config:
+- name: Set buffer size
+  cisco.ios.ios_config:
     lines:
       - "logging buffered {{ log_buf_size }} {{ log_level }}"
   when: not check_only | bool
   tags: logging
 
-- name: remote syslog servers
-  ios_config:
+- name: Remote syslog servers
+  cisco.ios.ios_config:
     lines:
       - "logging host {{ item.host }} transport udp port {{ item.port }}"
   loop: "{{ log_servers }}"
   when: not check_only | bool
   tags: logging
 
-- name: source interface for logs
-  ios_config:
+- name: Source interface for logs
+  cisco.ios.ios_config:
     lines:
       - "logging source-interface {{ log_src_iface }}"
   when: not check_only | bool
   tags: logging
 
-- name: timestamps and login tracking
-  ios_config:
+- name: Timestamps and login tracking
+  cisco.ios.ios_config:
     lines:
       - "logging on"
       - "logging trap {{ log_level }}"

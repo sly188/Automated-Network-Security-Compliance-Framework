@@ -1,28 +1,28 @@
 ---
-- name: generate rsa key
-  ios_command:
+- name: Generate RSA key
+  cisco.ios.ios_command:
     commands:
       - "crypto key generate rsa modulus {{ ssh_bits }}"
   when: not check_only | bool
   tags: ssh
 
-- name: lock down to sshv2
-  ios_config:
+- name: Lock down to SSHv2
+  cisco.ios.ios_config:
     lines:
       - "ip ssh version 2"
   when: not check_only | bool
   tags: ssh
 
-- name: set timeouts
-  ios_config:
+- name: Set SSH timeouts
+  cisco.ios.ios_config:
     lines:
       - "ip ssh time-out {{ ssh_timeout }}"
       - "ip ssh authentication-retries {{ ssh_retries }}"
   when: not check_only | bool
   tags: ssh
 
-- name: vty lines ssh only, no telnet
-  ios_config:
+- name: VTY lines SSH only, no telnet
+  cisco.ios.ios_config:
     parents: "line vty 0 15"
     lines:
       - "transport input ssh"
@@ -33,8 +33,8 @@
   when: not check_only | bool
   tags: ssh
 
-- name: console line
-  ios_config:
+- name: Console line hardening
+  cisco.ios.ios_config:
     parents: "line con 0"
     lines:
       - "exec-timeout 10 0"
@@ -43,8 +43,8 @@
   tags: ssh
 
 # aux is rarely used but lock it anyway
-- name: lock aux port
-  ios_config:
+- name: Lock aux port
+  cisco.ios.ios_config:
     parents: "line aux 0"
     lines:
       - "transport input none"

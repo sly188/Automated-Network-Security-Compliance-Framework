@@ -1,13 +1,13 @@
 ---
-- name: enable aaa
-  ios_config:
+- name: Enable AAA
+  cisco.ios.ios_config:
     lines:
       - "aaa new-model"
   when: not check_only | bool
   tags: aaa
 
-- name: add tacacs servers
-  ios_config:
+- name: Add TACACS servers
+  cisco.ios.ios_config:
     lines:
       - "tacacs server {{ 'TACACS-' + (item.host | replace('.', '-')) }}"
       - " address ipv4 {{ item.host }}"
@@ -18,8 +18,8 @@
   when: not check_only | bool
   tags: aaa
 
-- name: tacacs server group
-  ios_config:
+- name: TACACS server group
+  cisco.ios.ios_config:
     lines:
       - "aaa group server tacacs+ TACACS-GROUP"
       - " server name {{ 'TACACS-' + (item.host | replace('.', '-')) }}"
@@ -27,8 +27,8 @@
   when: not check_only | bool
   tags: aaa
 
-- name: authentication policies
-  ios_config:
+- name: Authentication policies
+  cisco.ios.ios_config:
     lines:
       - "aaa authentication login default group tacacs+ local"
       - "aaa authentication enable default group tacacs+ enable"
@@ -36,8 +36,8 @@
   when: not check_only | bool
   tags: aaa
 
-- name: authorization policies
-  ios_config:
+- name: Authorization policies
+  cisco.ios.ios_config:
     lines:
       - "aaa authorization exec default group tacacs+ local"
       - "aaa authorization commands 15 default group tacacs+ local"
@@ -45,8 +45,8 @@
   when: not check_only | bool
   tags: aaa
 
-- name: accounting
-  ios_config:
+- name: Accounting policies
+  cisco.ios.ios_config:
     lines:
       - "aaa accounting exec default start-stop group tacacs+"
       - "aaa accounting commands 15 default start-stop group tacacs+"
@@ -54,8 +54,8 @@
   tags: aaa
 
 # console falls back to local if tacacs is down
-- name: console uses local auth as fallback
-  ios_config:
+- name: Console uses local auth as fallback
+  cisco.ios.ios_config:
     parents: "line con 0"
     lines:
       - "login authentication CONSOLE"

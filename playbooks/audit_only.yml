@@ -3,21 +3,22 @@
 # safe to run anytime
 # usage: ansible-playbook playbooks/audit_only.yml
 
-- name: audit all devices
+- name: Audit all devices
   hosts: network_devices
   gather_facts: false
   serial: 10
   pre_tasks:
-    - name: create results dir
-      file:
+    - name: Create results dir
+      ansible.builtin.file:
         path: reports/audit_results
         state: directory
+        mode: '0755'
       delegate_to: localhost
       run_once: true
   roles:
     - auditing
 
-- name: generate report
+- name: Generate report
   hosts: localhost
   gather_facts: true
   roles:

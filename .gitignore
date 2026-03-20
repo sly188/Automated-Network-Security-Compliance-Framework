@@ -1,5 +1,5 @@
 .vault_pass
-backups/**/*.cfg
+*.cfg
 backups/
 logs/
 reports/

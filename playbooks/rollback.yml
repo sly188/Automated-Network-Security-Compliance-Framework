@@ -3,13 +3,13 @@
 # usage: ansible-playbook playbooks/rollback.yml --limit rtr-core-01
 #        -e "backup_file=backups/rtr-core-01/2024-01-15/rtr-core-01_1705305600.cfg"
 
-- name: rollback device config
+- name: Rollback device config
   hosts: "{{ target | default('network_devices') }}"
   gather_facts: false
 
   tasks:
-    - name: confirm rollback
-      pause:
+    - name: Confirm rollback
+      ansible.builtin.pause:
         prompt: |
           WARNING: rolling back {{ inventory_hostname }}
           file: {{ backup_file }}
@@ -17,23 +17,24 @@
       register: confirm
       delegate_to: localhost
 
-    - name: abort if not confirmed
-      fail:
+    - name: Abort if not confirmed
+      ansible.builtin.fail:
         msg: "rollback cancelled"
       when: confirm.user_input != 'yes'
 
-    - name: apply backup config
-      ios_config:
+    - name: Apply backup config
+      cisco.ios.ios_config:
         src: "{{ backup_file }}"
 
-    - name: save
-      ios_command:
+    - name: Save config
+      cisco.ios.ios_command:
         commands:
           - write memory
 
-    - name: log the rollback
-      lineinfile:
+    - name: Log the rollback
+      ansible.builtin.lineinfile:
         path: logs/rollback.log
         line: "{{ ansible_date_time.iso8601 }} | {{ inventory_hostname }} | rolled back from {{ backup_file }}"
-        create: yes
+        create: true
+        mode: '0644'
       delegate_to: localhost

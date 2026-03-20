@@ -43,6 +43,8 @@ report_dir: "reports"
 threshold: 80
 
 login_banner: |
-  AUTHORIZED ACCESS ONLY                                        
-  Unauthorized access is prohibited    
-  All activity is monitored and logged.               
+  ******************************************************************
+  *  AUTHORIZED ACCESS ONLY                                        *
+  *  Unauthorized access is prohibited and will be prosecuted.     *
+  *  All activity is monitored and logged.                         *
+  ******************************************************************

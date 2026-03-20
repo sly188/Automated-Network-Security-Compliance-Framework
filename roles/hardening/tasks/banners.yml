@@ -1,14 +1,14 @@
 ---
-- name: login banner
-  ios_banner:
+- name: Login banner
+  cisco.ios.ios_banner:
     banner: login
     text: "{{ login_banner }}"
     state: present
   when: not check_only | bool
   tags: banners
 
-- name: motd banner
-  ios_banner:
+- name: MOTD banner
+  cisco.ios.ios_banner:
     banner: motd
     text: "{{ login_banner }}"
     state: present
