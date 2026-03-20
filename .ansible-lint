@@ -1,0 +1,4 @@
+---
+profile: production
+warn_list:
+  - run-once[task]

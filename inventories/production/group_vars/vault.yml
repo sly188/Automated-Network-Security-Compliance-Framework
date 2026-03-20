@@ -1,3 +1,7 @@
+---
+# encrypt this file before committing
+# ansible-vault encrypt inventories/production/group_vars/vault.yml
+
 vault_user:       "netadmin"
 vault_pass:       "CHANGE_ME"
 vault_enable:     "CHANGE_ME"

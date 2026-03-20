@@ -3,7 +3,7 @@
   cisco.ios.ios_facts:
     gather_subset:
       - all
-  register: audit_facts
+  register: auditing_audit_facts
   tags: [always]
 
 - name: Pull show commands
@@ -15,17 +15,17 @@
       - "show snmp"
       - "show ntp status"
       - "show logging"
-  register: raw_output
+  register: auditing_raw_output
   tags: [always]
 
 - name: Init results
   ansible.builtin.set_fact:
-    results:
+    auditing_results:
       host: "{{ inventory_hostname }}"
       ip: "{{ ansible_host }}"
       timestamp: "{{ ansible_date_time.iso8601 }}"
-      os_version: "{{ audit_facts.ansible_facts.ansible_net_version }}"
-      model: "{{ audit_facts.ansible_facts.ansible_net_model }}"
+      os_version: "{{ auditing_audit_facts.ansible_facts.ansible_net_version }}"
+      model: "{{ auditing_audit_facts.ansible_facts.ansible_net_model }}"
       checks: []
       total: 0
       passed: 0
@@ -35,66 +35,171 @@
 
 - name: "Check: SSHv2 enforced"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'SSH-001', 'category': 'SSH', 'description': 'SSHv2 enforced', 'status': 'PASS' if 'ip ssh version 2' in raw_output.stdout[0] else 'FAIL', 'severity': 'HIGH', 'cis': '4.1'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'SSH-001',
+          'category': 'SSH',
+          'description': 'SSHv2 enforced',
+          'status': 'PASS' if 'ip ssh version 2' in auditing_raw_output.stdout[0] else 'FAIL',
+          'severity': 'HIGH',
+          'cis': '4.1'
+        }]
+      }, recursive=True) }}
   when: auditing_check_ssh | bool
   tags: audit
 
 - name: "Check: No telnet on VTY"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'SSH-002', 'category': 'SSH', 'description': 'Telnet disabled on VTY lines', 'status': 'FAIL' if 'transport input telnet' in raw_output.stdout[0] else 'PASS', 'severity': 'CRITICAL', 'cis': '4.2'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'SSH-002',
+          'category': 'SSH',
+          'description': 'Telnet disabled on VTY lines',
+          'status': 'FAIL' if 'transport input telnet' in auditing_raw_output.stdout[0] else 'PASS',
+          'severity': 'CRITICAL',
+          'cis': '4.2'
+        }]
+      }, recursive=True) }}
   when: auditing_check_ssh | bool
   tags: audit
 
 - name: "Check: Syslog configured"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'LOG-001', 'category': 'Logging', 'description': 'Remote syslog server configured', 'status': 'PASS' if 'logging host' in raw_output.stdout[0] else 'FAIL', 'severity': 'HIGH', 'cis': '6.2'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'LOG-001',
+          'category': 'Logging',
+          'description': 'Remote syslog server configured',
+          'status': 'PASS' if 'logging host' in auditing_raw_output.stdout[0] else 'FAIL',
+          'severity': 'HIGH',
+          'cis': '6.2'
+        }]
+      }, recursive=True) }}
   when: auditing_check_logging | bool
   tags: audit
 
 - name: "Check: Log timestamps"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'LOG-002', 'category': 'Logging', 'description': 'Timestamps enabled on logs', 'status': 'PASS' if 'service timestamps log datetime' in raw_output.stdout[0] else 'FAIL', 'severity': 'MEDIUM', 'cis': '6.3'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'LOG-002',
+          'category': 'Logging',
+          'description': 'Timestamps enabled on logs',
+          'status': 'PASS' if 'service timestamps log datetime' in auditing_raw_output.stdout[0] else 'FAIL',
+          'severity': 'MEDIUM',
+          'cis': '6.3'
+        }]
+      }, recursive=True) }}
   when: auditing_check_logging | bool
   tags: audit
 
 - name: "Check: No default SNMP communities"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'SNMP-001', 'category': 'SNMP', 'description': 'Default communities removed', 'status': 'FAIL' if ('snmp-server community public' in raw_output.stdout[0] or 'snmp-server community private' in raw_output.stdout[0]) else 'PASS', 'severity': 'CRITICAL', 'cis': '7.1'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'SNMP-001',
+          'category': 'SNMP',
+          'description': 'Default communities removed',
+          'status': 'FAIL' if (
+            'snmp-server community public' in auditing_raw_output.stdout[0] or
+            'snmp-server community private' in auditing_raw_output.stdout[0]
+          ) else 'PASS',
+          'severity': 'CRITICAL',
+          'cis': '7.1'
+        }]
+      }, recursive=True) }}
   when: auditing_check_snmp | bool
   tags: audit
 
 - name: "Check: NTP synced"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'NTP-001', 'category': 'NTP', 'description': 'NTP synchronized', 'status': 'PASS' if 'synchronized' in raw_output.stdout[4] | lower else 'FAIL', 'severity': 'HIGH', 'cis': '2.3'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'NTP-001',
+          'category': 'NTP',
+          'description': 'NTP synchronized',
+          'status': 'PASS' if 'synchronized' in auditing_raw_output.stdout[4] | lower else 'FAIL',
+          'severity': 'HIGH',
+          'cis': '2.3'
+        }]
+      }, recursive=True) }}
   when: auditing_check_ntp | bool
   tags: audit
 
 - name: "Check: HTTP server off"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'SVC-001', 'category': 'Services', 'description': 'IP HTTP server disabled', 'status': 'FAIL' if ('ip http server' in raw_output.stdout[0] and 'no ip http server' not in raw_output.stdout[0]) else 'PASS', 'severity': 'HIGH', 'cis': '3.1'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'SVC-001',
+          'category': 'Services',
+          'description': 'IP HTTP server disabled',
+          'status': 'FAIL' if (
+            'ip http server' in auditing_raw_output.stdout[0] and
+            'no ip http server' not in auditing_raw_output.stdout[0]
+          ) else 'PASS',
+          'severity': 'HIGH',
+          'cis': '3.1'
+        }]
+      }, recursive=True) }}
   when: auditing_check_services | bool
   tags: audit
 
 - name: "Check: Password encryption"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'PWD-001', 'category': 'Passwords', 'description': 'Password encryption enabled', 'status': 'PASS' if 'service password-encryption' in raw_output.stdout[0] else 'FAIL', 'severity': 'HIGH', 'cis': '1.1'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'PWD-001',
+          'category': 'Passwords',
+          'description': 'Password encryption enabled',
+          'status': 'PASS' if 'service password-encryption' in auditing_raw_output.stdout[0] else 'FAIL',
+          'severity': 'HIGH',
+          'cis': '1.1'
+        }]
+      }, recursive=True) }}
   when: auditing_check_passwords | bool
   tags: audit
 
 - name: "Check: Login banner"
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'checks': results.checks + [{'id': 'BNR-001', 'category': 'Banners', 'description': 'Login banner configured', 'status': 'PASS' if 'banner login' in raw_output.stdout[0] else 'FAIL', 'severity': 'MEDIUM', 'cis': '5.1'}]}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'checks': auditing_results.checks + [{
+          'id': 'BNR-001',
+          'category': 'Banners',
+          'description': 'Login banner configured',
+          'status': 'PASS' if 'banner login' in auditing_raw_output.stdout[0] else 'FAIL',
+          'severity': 'MEDIUM',
+          'cis': '5.1'
+        }]
+      }, recursive=True) }}
   when: auditing_check_banners | bool
   tags: audit
 
 - name: Calculate score
   ansible.builtin.set_fact:
-    results: "{{ results | combine({'total': results.checks | length, 'passed': results.checks | selectattr('status', 'equalto', 'PASS') | list | length, 'failed': results.checks | selectattr('status', 'equalto', 'FAIL') | list | length, 'score': ((results.checks | selectattr('status', 'equalto', 'PASS') | list | length) / (results.checks | length) * 100) | round(1)}, recursive=True) }}"
+    auditing_results: >-
+      {{ auditing_results | combine({
+        'total': auditing_results.checks | length,
+        'passed': auditing_results.checks | selectattr('status', 'equalto', 'PASS') | list | length,
+        'failed': auditing_results.checks | selectattr('status', 'equalto', 'FAIL') | list | length,
+        'score': (
+          (auditing_results.checks | selectattr('status', 'equalto', 'PASS') | list | length) /
+          (auditing_results.checks | length) * 100
+        ) | round(1)
+      }, recursive=True) }}
   tags: audit
 
 - name: Save results to file
   ansible.builtin.copy:
-    content: "{{ results | to_nice_json }}"
+    content: "{{ auditing_results | to_nice_json }}"
     dest: "{{ auditing_results_dir }}/{{ inventory_hostname }}.json"
     mode: '0644'
   delegate_to: localhost
@@ -102,13 +207,18 @@
 
 - name: Print summary
   ansible.builtin.debug:
-    msg: "{{ inventory_hostname }} | {{ results.score }}% | passed {{ results.passed }}/{{ results.total }}"
+    msg: >-
+      {{ inventory_hostname }} |
+      {{ auditing_results.score }}% |
+      passed {{ auditing_results.passed }}/{{ auditing_results.total }}
   tags: audit
 
 - name: Fail if below threshold
   ansible.builtin.fail:
-    msg: "{{ inventory_hostname }} scored {{ results.score }}% - below {{ auditing_min_score }}%"
+    msg: >-
+      {{ inventory_hostname }} scored
+      {{ auditing_results.score }}% - below {{ auditing_min_score }}%
   when:
     - auditing_fail_on_low_score | bool
-    - results.score | float < auditing_min_score | float
+    - auditing_results.score | float < auditing_min_score | float
   tags: audit

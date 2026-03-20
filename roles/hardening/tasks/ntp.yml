@@ -6,7 +6,7 @@
       - "ntp authentication-key {{ ntp_key_id }} md5 {{ ntp_key }}"
       - "ntp trusted-key {{ ntp_key_id }}"
   no_log: true
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ntp
 
 - name: Add NTP servers
@@ -14,12 +14,12 @@
     lines:
       - "ntp server {{ item }} key {{ ntp_key_id }} prefer"
   loop: "{{ ntp_servers }}"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ntp
 
 - name: Set timezone UTC
   cisco.ios.ios_config:
     lines:
       - "clock timezone UTC 0 0"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ntp

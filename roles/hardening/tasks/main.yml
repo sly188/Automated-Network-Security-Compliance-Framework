@@ -4,56 +4,56 @@
     gather_subset:
       - hardware
       - config
-  register: dev_facts
+  register: hardening_dev_facts
   tags: [always]
 
 - name: Backup before touching anything
   ansible.builtin.include_tasks: backup.yml
-  when: backup_first | bool
+  when: hardening_backup_first | bool
 
 - name: SSH hardening
   ansible.builtin.include_tasks: ssh.yml
-  when: run_ssh | bool
+  when: hardening_run_ssh | bool
   tags: [ssh]
 
 - name: AAA setup
   ansible.builtin.include_tasks: aaa.yml
-  when: run_aaa | bool
+  when: hardening_run_aaa | bool
   tags: [aaa]
 
 - name: NTP
   ansible.builtin.include_tasks: ntp.yml
-  when: run_ntp | bool
+  when: hardening_run_ntp | bool
   tags: [ntp]
 
 - name: Logging
   ansible.builtin.include_tasks: logging.yml
-  when: run_logging | bool
+  when: hardening_run_logging | bool
   tags: [logging]
 
 - name: SNMP
   ansible.builtin.include_tasks: snmp.yml
-  when: run_snmp | bool
+  when: hardening_run_snmp | bool
   tags: [snmp]
 
 - name: Disable unnecessary services
   ansible.builtin.include_tasks: services.yml
-  when: run_services | bool
+  when: hardening_run_services | bool
   tags: [services]
 
 - name: Password policy
   ansible.builtin.include_tasks: passwords.yml
-  when: run_passwords | bool
+  when: hardening_run_passwords | bool
   tags: [passwords]
 
 - name: Banners
   ansible.builtin.include_tasks: banners.yml
-  when: run_banners | bool
+  when: hardening_run_banners | bool
   tags: [banners]
 
 - name: Save config
   cisco.ios.ios_command:
     commands:
       - write memory
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   notify: save config

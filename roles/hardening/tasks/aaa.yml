@@ -3,7 +3,7 @@
   cisco.ios.ios_config:
     lines:
       - "aaa new-model"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: aaa
 
 - name: Add TACACS servers
@@ -15,7 +15,7 @@
       - " timeout {{ item.timeout }}"
   loop: "{{ tacacs_hosts }}"
   no_log: true
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: aaa
 
 - name: TACACS server group
@@ -24,7 +24,7 @@
       - "aaa group server tacacs+ TACACS-GROUP"
       - " server name {{ 'TACACS-' + (item.host | replace('.', '-')) }}"
   loop: "{{ tacacs_hosts }}"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: aaa
 
 - name: Authentication policies
@@ -33,7 +33,7 @@
       - "aaa authentication login default group tacacs+ local"
       - "aaa authentication enable default group tacacs+ enable"
       - "aaa authentication login CONSOLE local"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: aaa
 
 - name: Authorization policies
@@ -42,7 +42,7 @@
       - "aaa authorization exec default group tacacs+ local"
       - "aaa authorization commands 15 default group tacacs+ local"
       - "aaa authorization config-commands"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: aaa
 
 - name: Accounting policies
@@ -50,7 +50,7 @@
     lines:
       - "aaa accounting exec default start-stop group tacacs+"
       - "aaa accounting commands 15 default start-stop group tacacs+"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: aaa
 
 # console falls back to local if tacacs is down
@@ -59,5 +59,5 @@
     parents: "line con 0"
     lines:
       - "login authentication CONSOLE"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: aaa

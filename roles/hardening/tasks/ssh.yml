@@ -3,14 +3,14 @@
   cisco.ios.ios_command:
     commands:
       - "crypto key generate rsa modulus {{ ssh_bits }}"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ssh
 
 - name: Lock down to SSHv2
   cisco.ios.ios_config:
     lines:
       - "ip ssh version 2"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ssh
 
 - name: Set SSH timeouts
@@ -18,7 +18,7 @@
     lines:
       - "ip ssh time-out {{ ssh_timeout }}"
       - "ip ssh authentication-retries {{ ssh_retries }}"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ssh
 
 - name: VTY lines SSH only, no telnet
@@ -30,7 +30,7 @@
       - "exec-timeout 10 0"
       - "logging synchronous"
       - "login authentication default"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ssh
 
 - name: Console line hardening
@@ -39,7 +39,7 @@
     lines:
       - "exec-timeout 10 0"
       - "logging synchronous"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ssh
 
 # aux is rarely used but lock it anyway
@@ -50,5 +50,5 @@
       - "transport input none"
       - "no exec"
       - "exec-timeout 0 1"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: ssh

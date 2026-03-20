@@ -3,7 +3,7 @@
   cisco.ios.ios_config:
     lines:
       - "logging buffered {{ log_buf_size }} {{ log_level }}"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: logging
 
 - name: Remote syslog servers
@@ -11,14 +11,14 @@
     lines:
       - "logging host {{ item.host }} transport udp port {{ item.port }}"
   loop: "{{ log_servers }}"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: logging
 
 - name: Source interface for logs
   cisco.ios.ios_config:
     lines:
       - "logging source-interface {{ log_src_iface }}"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: logging
 
 - name: Timestamps and login tracking
@@ -30,5 +30,5 @@
       - "service timestamps debug datetime msec localtime show-timezone"
       - "login on-failure log every 3"
       - "login on-success log every 10"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: logging

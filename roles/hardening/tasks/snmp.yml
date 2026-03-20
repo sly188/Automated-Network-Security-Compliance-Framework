@@ -5,14 +5,14 @@
     lines:
       - "no snmp-server community public"
       - "no snmp-server community private"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: snmp
 
 - name: SNMPv3 group with AuthPriv
   cisco.ios.ios_config:
     lines:
       - "snmp-server group {{ snmp_group }} v3 priv"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: snmp
 
 - name: SNMPv3 user
@@ -20,7 +20,7 @@
     lines:
       - "snmp-server user {{ snmp_user }} {{ snmp_group }} v3 auth {{ snmp_auth_proto }} {{ snmp_auth_pass }} priv {{ snmp_priv_proto }} {{ snmp_priv_pass }}"
   no_log: true
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: snmp
 
 - name: Location and contact
@@ -28,5 +28,5 @@
     lines:
       - "snmp-server location DC1"
       - "snmp-server contact netops@company.com"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: snmp

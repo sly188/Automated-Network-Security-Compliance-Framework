@@ -3,7 +3,7 @@
 #
 # usage:
 #   full run    : ansible-playbook playbooks/site.yml
-#   dry run     : ansible-playbook playbooks/site.yml -e "check_only=true"
+#   dry run     : ansible-playbook playbooks/site.yml -e "hardening_check_only=true"
 #   single host : ansible-playbook playbooks/site.yml --limit rtr-core-01
 #   single tag  : ansible-playbook playbooks/site.yml --tags ssh
 
@@ -18,11 +18,8 @@
   hosts: network_devices
   gather_facts: false
   serial: 3
-  vars:
-    check_only: "{{ dry_run | default(false) }}"
   roles:
     - hardening
-  when: not (dry_run | default(false)) | bool
 
 - name: Post-hardening verification
   hosts: network_devices

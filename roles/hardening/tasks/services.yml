@@ -4,7 +4,7 @@
     lines:
       - "no service tcp-small-servers"
       - "no service udp-small-servers"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: services
 
 - name: Turn off HTTP server
@@ -12,14 +12,14 @@
     lines:
       - "no ip http server"
       - "no ip http secure-server"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: services
 
 - name: Disable IP source routing
   cisco.ios.ios_config:
     lines:
       - "no ip source-route"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: services
 
 - name: TCP keepalives
@@ -27,26 +27,26 @@
     lines:
       - "service tcp-keepalives-in"
       - "service tcp-keepalives-out"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: services
 
 - name: Password encryption service
   cisco.ios.ios_config:
     lines:
       - "service password-encryption"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: services
 
 - name: Disable PAD
   cisco.ios.ios_config:
     lines:
       - "no service pad"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: services
 
 - name: Disable finger service
   cisco.ios.ios_config:
     lines:
       - "no service finger"
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: services

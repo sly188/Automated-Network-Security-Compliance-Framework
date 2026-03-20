@@ -9,7 +9,8 @@
 
 - name: Load per-host results
   ansible.builtin.set_fact:
-    reporting_all_results: "{{ reporting_all_results | default([]) + [lookup('file', item) | from_json] }}"
+    reporting_all_results: >-
+      {{ reporting_all_results | default([]) + [lookup('file', item) | from_json] }}
   loop: "{{ query('fileglob', 'reports/audit_results/*.json') }}"
   run_once: true
   delegate_to: localhost
@@ -17,11 +18,16 @@
 - name: Calc overall stats
   ansible.builtin.set_fact:
     reporting_overall_score: >-
-      {{ (reporting_all_results | map(attribute='score') | map('float') | sum / reporting_all_results | length) | round(1) }}
+      {{ (reporting_all_results | map(attribute='score') | map('float') | sum
+        / reporting_all_results | length) | round(1) }}
     reporting_critical_fails: >-
-      {{ reporting_all_results | sum(attribute='checks') | selectattr('severity', 'equalto', 'CRITICAL') | selectattr('status', 'equalto', 'FAIL') | list | length }}
+      {{ reporting_all_results | sum(attribute='checks')
+        | selectattr('severity', 'equalto', 'CRITICAL')
+        | selectattr('status', 'equalto', 'FAIL') | list | length }}
     reporting_high_fails: >-
-      {{ reporting_all_results | sum(attribute='checks') | selectattr('severity', 'equalto', 'HIGH') | selectattr('status', 'equalto', 'FAIL') | list | length }}
+      {{ reporting_all_results | sum(attribute='checks')
+        | selectattr('severity', 'equalto', 'HIGH')
+        | selectattr('status', 'equalto', 'FAIL') | list | length }}
     reporting_run_date: "{{ ansible_date_time.iso8601 }}"
   run_once: true
   delegate_to: localhost
@@ -42,7 +48,15 @@
 
 - name: Generate JSON summary
   ansible.builtin.copy:
-    content: "{{ {'date': reporting_run_date, 'overall_score': reporting_overall_score, 'total_hosts': reporting_all_results | length, 'critical_fails': reporting_critical_fails, 'high_fails': reporting_high_fails, 'hosts': reporting_all_results} | to_nice_json }}"
+    content: >-
+      {{ {
+        'date': reporting_run_date,
+        'overall_score': reporting_overall_score,
+        'total_hosts': reporting_all_results | length,
+        'critical_fails': reporting_critical_fails,
+        'high_fails': reporting_high_fails,
+        'hosts': reporting_all_results
+      } | to_nice_json }}
     dest: "{{ report_dir }}/report_{{ ansible_date_time.date }}.json"
     mode: '0644'
   run_once: true

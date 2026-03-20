@@ -4,7 +4,7 @@
     banner: login
     text: "{{ login_banner }}"
     state: present
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: banners
 
 - name: MOTD banner
@@ -12,5 +12,5 @@
     banner: motd
     text: "{{ login_banner }}"
     state: present
-  when: not check_only | bool
+  when: not hardening_check_only | bool
   tags: banners
