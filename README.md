@@ -64,22 +64,22 @@ pre-audit -> hardening -> post-audit -> report
 ## USAGE INSTRUCTIONS
 
 bash
-# read-only compliance scan (safe to run anytime)
+read-only compliance scan (safe to run anytime)
 ansible-playbook playbooks/audit_only.yml
 
-# see what would change without touching anything
+see what would change without touching anything
 ansible-playbook playbooks/site.yml -e "check_only=true"
 
-# full run
+full run
 ansible-playbook playbooks/site.yml
 
-# target one device
+target one device
 ansible-playbook playbooks/site.yml --limit rtr-core-01
 
-# only fix ssh config
+only fix ssh config
 ansible-playbook playbooks/site.yml --tags ssh
 
-# rollback a device
+rollback a device
 ansible-playbook playbooks/rollback.yml --limit rtr-core-01 \
   -e "backup_file=backups/rtr-core-01/2024-01-15/rtr-core-01_1705305600.cfg"
 
@@ -89,10 +89,10 @@ bash
 pip install ansible netmiko
 ansible-galaxy collection install -r requirements.yml
 
-# create vault password file — never commit this
+create vault password file 
 echo "your-password" > .vault_pass
 
-# encrypt secrets before committing
+encrypt secrets before committing
 ansible-vault encrypt inventories/production/group_vars/vault.yml
 
-# update hosts.yml with your device IPs
+update hosts.yml with your device IPs
