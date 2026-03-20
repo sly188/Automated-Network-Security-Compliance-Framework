@@ -22,6 +22,9 @@ on:
         required: false
         default: 'true'
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   lint:
     name: lint and syntax check
@@ -32,7 +35,7 @@ jobs:
       - name: install deps
         run: |
           pip install ansible ansible-lint
-          ansible-galaxy collection install cisco.ios
+          ansible-galaxy collection install cisco.ios ansible.netcommon
 
       - name: lint
         run: ansible-lint roles/ playbooks/
@@ -41,6 +44,7 @@ jobs:
         run: |
           ansible-playbook playbooks/site.yml --syntax-check -i inventories/production
           ansible-playbook playbooks/audit_only.yml --syntax-check -i inventories/production
+          ansible-playbook playbooks/rollback.yml --syntax-check -i inventories/production
 
   audit:
     name: compliance audit
@@ -62,7 +66,7 @@ jobs:
       - name: install ansible
         run: |
           pip install ansible netmiko
-          ansible-galaxy collection install cisco.ios
+          ansible-galaxy collection install cisco.ios ansible.netcommon
 
       - name: create dirs
         run: mkdir -p logs reports/audit_results backups
@@ -119,7 +123,7 @@ jobs:
       - name: install ansible
         run: |
           pip install ansible netmiko
-          ansible-galaxy collection install cisco.ios
+          ansible-galaxy collection install cisco.ios ansible.netcommon
 
       - name: create dirs
         run: mkdir -p logs reports/audit_results reports/post_hardening backups

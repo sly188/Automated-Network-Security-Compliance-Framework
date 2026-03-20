@@ -1,14 +1,14 @@
 ---
-check_ssh:       true
-check_aaa:       true
-check_ntp:       true
-check_logging:   true
-check_snmp:      true
-check_services:  true
-check_passwords: true
-check_banners:   true
+auditing_check_ssh: true
+auditing_check_aaa: true
+auditing_check_ntp: true
+auditing_check_logging: true
+auditing_check_snmp: true
+auditing_check_services: true
+auditing_check_passwords: true
+auditing_check_banners: true
 
-fail_on_low_score: false
-min_score: "{{ threshold | default(80) }}"
+auditing_fail_on_low_score: false
+auditing_min_score: "{{ threshold | default(80) }}"
 
-results_dir: "reports/audit_results"
+auditing_results_dir: "reports/audit_results"
