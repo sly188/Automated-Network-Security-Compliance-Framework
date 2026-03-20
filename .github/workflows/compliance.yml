@@ -36,7 +36,12 @@ jobs:
         run: |
           pip install ansible ansible-lint
           ansible-galaxy collection install cisco.ios ansible.netcommon
-
+      
+      - name: create required dirs and files
+        run: |
+          mkdir -p logs
+          echo "placeholder" > .vault_pass
+          
       - name: lint
         run: ansible-lint roles/ playbooks/
 
